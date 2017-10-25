@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style type="text/css">
+        ul,ol{
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        ul {
+            position: relative;
+        }
+        #box {
+            width: 771px;
+            height: 245px;
+            margin:50px auto;
+            position: relative;
+        }
+        ul li {
+            position: absolute;
+            left: 0;
+            top: 0;
+            display: none;
+        }
+        ol#nav {
+            position: absolute;
+            left: 30px;
+            bottom: 10px;
+        }
+        ol#nav li {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: orange;
+            margin-right: 10px;
+            float: left;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+            cursor: pointer;
+        }
+        /*要给一个导航小方块激活样式*/
+        ol#nav li.active {
+            background-color: red;
+        }
+
+        #box>a {
+            position: absolute;
+            top: 100px;
+            display: block;
+            width: 50px;
+            height: 40px;
+            background-color: rgba(0,0,0,0.5);
+            text-decoration: none;
+            font-size:40px;
+            text-align: center;
+            line-height: 40px;
+            color: orange;
+            /*默认先让小箭头隐藏*/
+            display: none;
+        }
+        #box a#right {
+            right: 0;
+        }
+    </style>
+    <script src="jquery-1.12.4.min.js"></script>
+    <script>
+
+        $(function () {
+            // 需求：当移动到某个小点上时，让该小点对应的图片淡入，让其他图片淡出
+            // 需求：让其自动播放
+            // 需求：点击右则按钮，让其向右播放，点击左侧按钮让其向左
+            // 需求：当鼠标移动到box上时，显示左右按钮，并停止自动播放，离开则隐藏，并自动播放
+
+            // 当移动到某个小点上时，让该小点对应的图片淡入，让其他图片淡出
+            $("ol li").mouseenter(function () {
+                var index = $(this).index();
+                $(this).addClass("active").siblings().removeClass("active");
+                $("ul li").eq(index).fadeIn().siblings().fadeOut();
+                num = index;
+            });
+
+            // 创建一个定时器，让其自动播放
+            var timer = null;
+            timer = setInterval(autoplay,1500);
+
+            // 当鼠标移动到盒子上时，清除定时器，并显示左右按钮
+            $("#box").mouseenter(function () {
+                clearInterval(timer);
+                $("#box>a").fadeIn();
+            });
+            // 当鼠标离开盒子时，开启定时器，隐藏左右按钮
+            $("#box").mouseleave(function () {
+                timer = setInterval(autoplay,1500);
+                $("#box>a").fadeOut();
+            });
+
+            // 当点击右侧按钮时，让其向右播放
+            $("#right").click(function () {
+                autoplay();
+            });
+            // 当点击左侧按钮时，让其向左播放
+            $("#left").click(function () {
+                num--;
+                if (num < 0) {
+                    num = $("ul li").length - 1;
+                }
+                move(num);
+            });
+
+            // 封装一个播放的函数
+            var num = 0;
+            function autoplay() {
+                num++;
+                if (num > $("ol li").length - 1) {
+                    num = 0;
+                }
+                move(num);
+            }
+
+            // 将相同的代码提出来封装到函数里
+            function move(num) {
+                $("ul li").eq(num).fadeIn().siblings().fadeOut();
+                $("ol li").eq(num).addClass("active").siblings().removeClass("active");
+            }
+
+
+        });
+
+    </script>
+
+</head>
+<body>
+    <!--# 在本页面要进行一次跳转   JavaScript:; 阻止当前链接进行跳转-->
+    <!--<a href="javascript:alert(123);">打开百度</a>-->
+    <div id="box">
+        <ul>
+            <li style="display: block;"><a href="#"><img src="img/1.jpg" alt="" /></a></li>
+            <li><a href="#"><img src="img/2.jpg" alt="" /></a></li>
+            <li><a href="#"><img src="img/3.jpg" alt="" /></a></li>
+            <li><a href="#"><img src="img/4.jpg" alt="" /></a></li>
+        </ul>
+        <ol id="nav">
+            <li class="active">1</li>
+            <li>2</li>
+            <li>3</li>
+            <li>4</li>
+        </ol>
+        <a href="JavaScript:;" id="left">&lt;</a>
+        <a href="JavaScript:;" id="right">&gt;</a>
+    </div>
+</body>
+</html>

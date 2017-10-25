@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style type="text/css">
+        * {
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            border: 0;
+        }
+
+        .all {
+            width: 500px;
+            height: 200px;
+            padding: 7px;
+            border: 1px solid #ccc;
+            margin: 100px auto;
+            position: relative;
+        }
+
+        .screen {
+            width: 500px;
+            height: 200px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .screen li {
+            width: 500px;
+            height: 200px;
+            overflow: hidden;
+            float: left;
+        }
+
+        .screen ul {
+            position: absolute;
+            left: 0;
+            top: 0px;
+            width: 3000px;
+        }
+
+        .all ol {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            line-height: 20px;
+            text-align: center;
+        }
+
+        .all ol li {
+            float: left;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border: 1px solid #ccc;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        .all ol li.current {
+            background: yellow;
+        }
+
+        #arr {display: none;}
+        #arr span {
+            width: 40px;
+            height: 40px;
+            position: absolute;
+            left: 5px;
+            top: 50%;
+            margin-top: -20px;
+            background: #000;
+            cursor: pointer;
+            line-height: 40px;
+            text-align: center;
+            font-weight: bold;
+            font-family: '黑体';
+            font-size: 30px;
+            color: #fff;
+            opacity: 0.3;
+            border: 1px solid #fff;
+        }
+
+        #arr #right {
+            right: 5px;
+            left: auto;
+        }
+    </style>
+
+    <script>
+        window.onload = function () {
+            // 原理：复制第一张图片到末尾，从第二轮开始，从最后一张移动到第二张的时候，瞬间闪现到开头第一张
+            // 需求1：根据ul里面li的个数生成对应的小点个数
+            // 需求2: 当鼠标移动到某个小点上时，让ul移动，显示对应的图片
+            // 需求3：让图片自动循环播放
+            // 需求4: 当鼠标移动到外部大盒子上的时候，停止自动播放
+            // 需求5: 当鼠标移动到外部大盒子上的时候，显示左右小三角按钮
+            // 需求6：当点击右三角的时候，让图片向左移动一张，点击左三角的时候，让图片向右移动一张
+
+
+            // 获取事件源
+            var all = document.getElementById("all");
+            var ul = document.getElementById("ul");
+            var ulLiArr = ul.getElementsByTagName("li");
+            var ol = document.getElementById("ol");
+            var screen = document.getElementById("screen")
+            var imgWidth = screen.offsetWidth;
+            var arr = document.getElementById("arr");
+            var arrLeft = document.getElementById("left");
+            var arrRight = document.getElementById("right");
+            console.log(arrRight);
+
+
+
+            // 需求1：根据图片个数生成对应的小点
+            for (var i = 0; i < ulLiArr.length; i++) {
+                var Li = document.createElement("li");
+                Li.innerHTML = i+1;
+                ol.appendChild(Li);
+            }
+
+            // 复制第一张图片到ul的最末尾
+            var newLi = ulLiArr[0].cloneNode(true);
+            ul.appendChild(newLi);
+
+            // 需求2: 当鼠标移动到某个小点上时，显示对应的图片
+            // 默认先让第一个显示
+            var olLiArr = ol.getElementsByTagName("li");
+            olLiArr[0].className = "current";
+            // for循环为每个li绑定事件
+            for (var j = 0; j < olLiArr.length; j++) {
+                olLiArr[j].index = j;
+                olLiArr[j].onmouseenter = function () {
+
+                    // 排他思想，点亮自身盒子
+                    for (var i = 0; i < olLiArr.length; i++) {
+                        olLiArr[i].className = "";
+                    }
+
+                    this.className = "current";
+
+                    // 计算该对应的图片距离左边的距离
+                    var distance = -imgWidth * this.index;
+                    animate(ul, distance);
+
+                    // 小方块移动后，将索引值告诉imgIndex和squareIndex
+                    imgIndex = this.index;
+                    squareIndex = this.index;
+                };
+            }
+
+
+
+            // 当点击右侧按钮时，让图片向左移动
+            // 创建两个变量，用来存储图片和小方块的索引位置
+            var imgIndex = 0;
+            var squareIndex = 0;
+            arrRight.onclick = autoplay;
+
+            // 当点左侧按钮时，让图片向右移动
+            arrLeft.onclick = function () {
+                imgIndex--;
+                squareIndex--;
+                // 当imgIndex等于0的时候，让他瞬间回到最后一张
+                if (imgIndex === -1) {
+                    ul.style.left = -imgWidth * (ulLiArr.length-1) + "px";
+                    imgIndex = ulLiArr.length - 2;
+                }
+                if (squareIndex === -1) {
+                    squareIndex = olLiArr.length - 1;
+                }
+                // 排他思想，点亮当前盒子
+                for (var i = 0; i < olLiArr.length; i++) {
+                    olLiArr[i].className = "";
+                }
+                olLiArr[squareIndex].className = "current";
+                // 计算需要移动的距离
+                var distance = -imgWidth * imgIndex;
+                animate(ul,distance);
+            };
+
+
+            // 创建一个定时器用来自动播放图片
+            var timer = null;
+            timer = setInterval(autoplay,1500);
+
+            // 当鼠标移动到盒子上的时候，显示左右按钮
+            all.onmouseenter = function () {
+                clearInterval(timer);
+                arr.style.display = "block";
+            };
+            all.onmouseleave = function () {
+                timer = setInterval(autoplay,1500);
+                arr.style.display = "none";
+            };
+
+
+            // 将图片的滚动封装成函数
+            function autoplay() {
+                imgIndex++;
+                squareIndex++;
+                // 当imgIndex大于图片的个数的时候，让其瞬间回到第一张图片
+                if (imgIndex === ulLiArr.length) {
+                    ul.style.left = 0 + "px";
+                    imgIndex = 1;
+                }
+                // 当squareIndex大于其个数时，让它回到第1个，即索引为0
+                if (squareIndex === olLiArr.length) {
+                    squareIndex = 0;
+                }
+                // 排他思想，点亮当前盒子
+                for (var i = 0; i < olLiArr.length; i++) {
+                    olLiArr[i].className = "";
+                }
+                olLiArr[squareIndex].className = "current";
+                // 计算需要移动的距离
+                var distance = -imgWidth * imgIndex;
+                animate(ul,distance);
+            }
+
+
+            // 封装一个animate动画，用来移动图片
+            function animate(ele,target) {
+                // 使用之前先清除定时器
+                clearInterval(ele.timer);
+                ele.timer = setInterval(function () {
+                    // 设置步长
+                    var step = target > ele.offsetLeft ? 10 : -10;
+                    ele.style.left = ele.offsetLeft + step + "px";
+                    // 判断是否走过了
+                    if (Math.abs(target - ele.offsetLeft) <= Math.abs(step)) {
+                        // 直接设置到目标位置
+                        ele.style.left = target + "px";
+                        // 并清除定时器
+                        clearInterval(ele.timer);
+                    }
+                },10);
+            }
+        };
+    </script>
+    
+    
+</head>
+<body>
+
+<!--外部盒子-->
+<div class="all" id='all'>
+    <!--内部盒子-->
+    <div class="screen" id="screen">
+        <!--图片们-->
+        <ul id="ul">
+            <li><img src="images/1.jpg" width="500" height="200"/></li>
+            <li><img src="images/2.jpg" width="500" height="200"/></li>
+            <li><img src="images/3.jpg" width="500" height="200"/></li>
+            <li><img src="images/4.jpg" width="500" height="200"/></li>
+            <li><img src="images/5.jpg" width="500" height="200"/></li>
+        </ul>
+        <!--小方块-->
+        <ol id="ol">
+
+        </ol>
+        <!--小三角-->
+        <div id="arr">
+            <span id="left"><</span>
+            <span id="right">></span>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
